@@ -39,7 +39,7 @@ class ProjectMemberTest extends TestCase
         
             ->getJson("/api/projects/{$project->id}");
 
-        $response->assertStatus(403); // Forbidden
+        $response->assertStatus(403); 
     }
 
     #[Test]
@@ -66,17 +66,14 @@ class ProjectMemberTest extends TestCase
 
         $project = Project::factory()->create(['user_id' => $owner->id]);
         
-        // إدراج العضو في المشروع
         $project->members()->attach($member->id, ['role' => 'member']);
 
-        // 2. محاولة العضو العادي إضافة شخص آخر للمشروع
         $response = $this->actingAs($member, 'api')
             ->postJson("/api/projects/{$project->id}/members", [
                 'user_id' => $stranger->id,
                 'role' => 'member'
             ]);
 
-        // 3. التأكد من الرفض بـ 403 Forbidden وعدم إضافته لقاعدة البيانات
         $response->assertStatus(403);
 
         $this->assertDatabaseMissing('project_user', [
@@ -88,21 +85,18 @@ class ProjectMemberTest extends TestCase
     #[Test]
     public function stranger_cannot_add_members_to_project()
     {
-        // 1. إنشاء صاحب المشروع وشخص غريب عن المشروع
-        $owner = User::factory()->create();
+       $owner = User::factory()->create();
         $stranger = User::factory()->create();
         $newUser = User::factory()->create();
 
         $project = Project::factory()->create(['user_id' => $owner->id]);
 
-        // 2. محاولة الشخص الغريب إضافة عضو للمشروع
         $response = $this->actingAs($stranger, 'api')
             ->postJson("/api/projects/{$project->id}/members", [
                 'user_id' => $newUser->id,
                 'role' => 'member'
             ]);
 
-        // 3. التأكد من الرفض بـ 403 Forbidden
         $response->assertStatus(403);
     }
 }

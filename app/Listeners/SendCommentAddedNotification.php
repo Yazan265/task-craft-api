@@ -4,7 +4,7 @@ namespace App\Listeners;
 
 use App\Events\CommentCreated;
 use App\Notifications\CommentAddedNotification;
-use Illuminate\Contracts\Queue\ShouldQueue; // <--- هذه تجعلها تعمل في الخلفية!
+use Illuminate\Contracts\Queue\ShouldQueue; 
 use Illuminate\Queue\InteractsWithQueue;
 
 class SendCommentAddedNotification implements ShouldQueue
@@ -16,7 +16,6 @@ class SendCommentAddedNotification implements ShouldQueue
         $comment = $event->comment;
         $task = $comment->task;
 
-        // نفس المنطق السابق للإشعار لكنه الآن يعمل في الخلفية!
         if ($task->assigned_to && $task->assigned_to !== $comment->user_id) {
             $task->assignee->notify(new CommentAddedNotification($comment));
         }

@@ -6,9 +6,7 @@ use App\Models\Project;
 
 class ReportService
 {
-    /**
-     * توليد مصفوفة الإحصائيات الشاملة للمشروع
-     */
+    
     public function getProjectSummary(Project $project): array
     {
         $tasks = $project->tasks;

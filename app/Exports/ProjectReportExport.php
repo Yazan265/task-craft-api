@@ -52,7 +52,7 @@ class ProjectReportExport implements FromCollection, WithHeadings, WithMapping, 
     public function styles(Worksheet $sheet)
     {
         return [
-            // تنسيق الصف الأول (Headings)
+            
             1 => [
                 'font' => [
                     'bold' => true,
@@ -60,7 +60,7 @@ class ProjectReportExport implements FromCollection, WithHeadings, WithMapping, 
                 ],
                 'fill' => [
                     'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['argb' => '1E293B'], // لون كحلي داكن راقي
+                    'startColor' => ['argb' => '1E293B'], 
                 ],
             ],
         ];

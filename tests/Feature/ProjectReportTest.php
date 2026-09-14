@@ -14,7 +14,6 @@ class ProjectReportTest extends TestCase
 {
     use RefreshDatabase;
 
-    // --- اختبارات المالك (Owner) ---
 
     #[Test]
     public function owner_can_get_project_summary_report()
@@ -122,7 +121,6 @@ class ProjectReportTest extends TestCase
         $response->assertStatus(403);
     }
 
-    // --- اختبارات عضو الفريق (Member) ---
 
     #[Test]
     public function member_cannot_access_project_summary_report()

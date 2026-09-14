@@ -31,10 +31,8 @@ class QueueAndListenerTest extends TestCase
 
         $task = Task::factory()->create();
 
-        // إطلاق الحدث يدويًا
         event(new TaskAssigned($task));
 
-        // التحقق من أن الـ Listener تم دفعه إلى الـ Queue
         Queue::assertPushed(\Illuminate\Events\CallQueuedListener::class, function ($job) {
             return $job->class === SendTaskAssignedNotification::class;
         });
@@ -58,11 +56,9 @@ class QueueAndListenerTest extends TestCase
             'user_id' => $user->id,
         ]);
 
-        // تنفيذ الـ Listener مباشرة (سلوك الكود الداخلي)
         $listener = new SendCommentAddedNotification();
         $listener->handle(new CommentCreated($comment));
 
-        // التحقق من أن الإشعار تم إرساله للمستخدم المسند إليه المهمة
         Notification::assertSentTo(
             $assignee,
             CommentAddedNotification::class

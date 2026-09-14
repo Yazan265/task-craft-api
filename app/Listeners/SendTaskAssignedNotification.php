@@ -4,7 +4,7 @@ namespace App\Listeners;
 
 use App\Events\TaskAssigned;
 use App\Notifications\TaskAssignedNotification;
-use Illuminate\Contracts\Queue\ShouldQueue; // <--- تجعلها تعمل في الخلفية!
+use Illuminate\Contracts\Queue\ShouldQueue; 
 use Illuminate\Queue\InteractsWithQueue;
 
 class SendTaskAssignedNotification implements ShouldQueue

@@ -40,7 +40,7 @@ class AuthTest extends TestCase
         $response = $this->postJson('/api/register', [
             'name' => '',
             'email' => 'invalid-email',
-            'password' => '123', // قصير جداً
+            'password' => '123', 
         ]);
 
         $response->assertStatus(422)
@@ -128,7 +128,6 @@ class AuthTest extends TestCase
                      'message' => 'Successfully logged out'
                  ]);
 
-        // التأكد من أن الـ Token أصبح ملغى وغير صالح للاستخدام مجدداً
         $this->getJson('/api/me')->assertStatus(401);
     }
 }

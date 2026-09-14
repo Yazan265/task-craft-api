@@ -27,19 +27,14 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/projects/{project}', [ProjectController::class, 'show']);
     Route::put('/projects/{project}', [ProjectController::class, 'update']);
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
-    // 1. جلب كل مهام مشروع معين
     Route::get('/projects/{project}/tasks', [TaskController::class, 'index']);
     
-    // 2. إنشاء مهمة جديدة داخل مشروع معين
     Route::post('/projects/{project}/tasks', [TaskController::class, 'store']);
     
-    // 3. عرض تفاصيل مهمة محددة
     Route::get('/tasks/{id}', [TaskController::class, 'show']);
     
-    // 4. تعديل مهمة محددة
     Route::put('/tasks/{id}', [TaskController::class, 'update']);
     
-    // 5. حذف مهمة محددة
     Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
     
 });

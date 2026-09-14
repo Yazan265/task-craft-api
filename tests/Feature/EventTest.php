@@ -25,7 +25,6 @@ class EventTest extends TestCase
         $assignee = User::factory()->create();
         $project = Project::factory()->create(['user_id' => $owner->id]);
 
-        // ربط المستخدم بالملف كعضو في المشروع ليتجاوز الـ Validation
         $project->members()->attach($assignee->id);
 
         $response = $this->actingAs($owner, 'api')
@@ -39,7 +38,6 @@ class EventTest extends TestCase
 
         $response->assertStatus(201);
 
-        // التحقق من إطلاق حدث TaskAssigned
         Event::assertDispatched(TaskAssigned::class, function ($event) use ($assignee) {
             return $event->task->assigned_to === $assignee->id;
         });
@@ -61,7 +59,6 @@ class EventTest extends TestCase
 
         $response->assertStatus(201);
 
-        // التحقق من إطلاق حدث CommentCreated
         Event::assertDispatched(CommentCreated::class, function ($event) use ($task) {
             return $event->comment->task_id === $task->id;
         });

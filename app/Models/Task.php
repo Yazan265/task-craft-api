@@ -29,9 +29,7 @@ class Task extends Model
                 return $this->hasMany(Comment::class);
             }
 
-            /**
- * Scope لتصفية المهام حسب الحالة (status)
- */
+         
 public function scopeFilterByStatus($query, ?string $status)
 {
     if ($status) {
@@ -41,9 +39,7 @@ public function scopeFilterByStatus($query, ?string $status)
     return $query;
 }
 
-/**
- * Scope لتصفية المهام حسب الأولوية (priority)
- */
+
 public function scopeFilterByPriority($query, ?string $priority)
 {
     if ($priority) {
@@ -53,9 +49,7 @@ public function scopeFilterByPriority($query, ?string $priority)
     return $query;
 }
 
-/**
- * Scope للبحث النصي في العنوان والوصف (search)
- */
+
     public function scopeSearch($query, ?string $search)
     {
         if ($search) {

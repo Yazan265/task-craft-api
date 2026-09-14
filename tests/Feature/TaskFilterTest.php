@@ -16,7 +16,6 @@ class TaskFilterTest extends TestCase
  #[Test]
     public function user_can_filter_tasks_by_status()
     {
-        // 1. الترتيب (Arrange)
         $user = User::factory()->create();
         $project = Project::factory()->create(['user_id' => $user->id]);
 

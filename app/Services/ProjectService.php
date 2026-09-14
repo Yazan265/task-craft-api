@@ -12,13 +12,10 @@ class ProjectService
         $data['user_id'] = $userId;
         $project = Project::create($data);
 
-        // تحميل علاقة المالك لإظهارها فوراً بعد الإنشاء
         return $project->load('user');
     }
 
-    /**
-     * جلب مشاريع المستخدم الحالي (التي يملكها أو مشارك فيها)
-     */
+  
     public function getUserProjects(int $userId): Collection
     {
         return Project::where('user_id', $userId)

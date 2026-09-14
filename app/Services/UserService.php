@@ -13,7 +13,6 @@ class UserService
     $data['password'] = Hash::make($data['password']);
     $user = User::create($data);
 
-    // توليد التوكن فوراً للمستخدم الجديد
     $token = auth()->guard('api')->login($user);
 
     return [
@@ -35,7 +34,6 @@ public function loginUser(array $credentials): ?string
 }
 public function refreshToken(): string
 {
-    // تقوم بتجديد التوكن الحالي الصادر للمستخدم وإرجاع توكن جديد
     return auth('api')->refresh();
 }
 }

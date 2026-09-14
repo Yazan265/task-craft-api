@@ -73,12 +73,10 @@ class TaskService
 
         event(new TaskAssigned($task));
 
-        return $task->load(['assignee', 'project']); // تم تصحيح assigneث إلى assignee
+        return $task->load(['assignee', 'project']); 
     }
 
-    /**
-     * التحقق من أن المستخدم إما صاحب المشروع أو عضو فيه
-     */
+    
     protected function validateUserIsProjectMember(Project $project, int $userId): void
     {
         $isOwner = ((int)$project->user_id === (int)$userId);
