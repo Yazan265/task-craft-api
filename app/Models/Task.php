@@ -10,7 +10,7 @@ class Task extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['title', 'description', 'project_id', 'assigned_to','status'];
+    protected $fillable = ['title', 'description', 'project_id', 'assigned_to','status','priority'];
     protected $casts = [
     'status' => 'string', 
         ];
@@ -28,4 +28,43 @@ class Task extends Model
             {
                 return $this->hasMany(Comment::class);
             }
+
+            /**
+ * Scope لتصفية المهام حسب الحالة (status)
+ */
+public function scopeFilterByStatus($query, ?string $status)
+{
+    if ($status) {
+        return $query->where('status', $status);
+    }
+
+    return $query;
+}
+
+/**
+ * Scope لتصفية المهام حسب الأولوية (priority)
+ */
+public function scopeFilterByPriority($query, ?string $priority)
+{
+    if ($priority) {
+        return $query->where('priority', $priority);
+    }
+
+    return $query;
+}
+
+/**
+ * Scope للبحث النصي في العنوان والوصف (search)
+ */
+    public function scopeSearch($query, ?string $search)
+    {
+        if ($search) {
+            return $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        return $query;
+    }
 }

@@ -25,6 +25,15 @@ class ProjectPolicy
     {
         return $user->id === $project->user_id;
     }
+        public function viewReport(User $user, Project $project): bool
+    {
+        // السماح فقط لمالك المشروع
+        return $user->id === $project->user_id;
+    }
+    public function export(User $user, Project $project): bool
+    {
+            return $user->id === $project->user_id;
+    }
 
     /**
      * تحديد هل يمكن للمستخدم حذف المشروع؟
@@ -33,4 +42,5 @@ class ProjectPolicy
     {
         return $user->id === $project->user_id;
     }
+  
 }

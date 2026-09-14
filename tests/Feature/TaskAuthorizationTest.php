@@ -102,4 +102,45 @@ class TaskAuthorizationTest extends TestCase
             'id' => $this->task->id
         ]);
     }
+    #[Test]
+    public function cannot_assign_task_to_user_who_is_not_project_member_or_owner()
+    {
+        $stranger = User::factory()->create();
+
+        // محاولة إنشاء مهمة وإسنادها لشخص غريب
+        $response = $this->actingAs($this->owner)
+            ->postJson("/api/projects/{$this->project->id}/tasks", [
+                'title' => 'Task for stranger',
+                'assigned_to' => $stranger->id,
+                'priority' => 'medium'
+            ]);
+
+        // يتوقع الرفض بخطأ 422 Unprocessable Entity
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['assigned_to']);
+    }
+
+    #[Test]
+    public function can_assign_task_to_a_valid_project_member()
+    {
+        $member = User::factory()->create();
+        
+        // إدراج المستخدم كعضو في المشروع
+        $this->project->members()->attach($member->id, ['role' => 'member']);
+
+        // إسناد المهمة للعضو المضاف
+        $response = $this->actingAs($this->owner)
+            ->postJson("/api/projects/{$this->project->id}/tasks", [
+                'title' => 'Task for valid member',
+                'assigned_to' => $member->id,
+                'priority' => 'medium'
+            ]);
+
+        $response->assertStatus(201);
+
+        $this->assertDatabaseHas('tasks', [
+            'title' => 'Task for valid member',
+            'assigned_to' => $member->id
+        ]);
+    }
 }

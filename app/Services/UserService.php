@@ -8,12 +8,19 @@ use Illuminate\Support\Facades\Hash;
 class UserService
 {
    
-    public function registerUser(array $data): User
-    {
-        $data['password'] = Hash::make($data['password']);
+  public function registerUser(array $data): array
+{
+    $data['password'] = Hash::make($data['password']);
+    $user = User::create($data);
 
-        return User::create($data);
-    }
+    // توليد التوكن فوراً للمستخدم الجديد
+    $token = auth()->guard('api')->login($user);
+
+    return [
+        'user' => $user,
+        'token' => $token,
+    ];
+}
    
 public function loginUser(array $credentials): ?string
 {
@@ -25,5 +32,10 @@ public function loginUser(array $credentials): ?string
     }
 
     return $token; 
+}
+public function refreshToken(): string
+{
+    // تقوم بتجديد التوكن الحالي الصادر للمستخدم وإرجاع توكن جديد
+    return auth('api')->refresh();
 }
 }

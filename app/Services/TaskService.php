@@ -5,69 +5,89 @@ namespace App\Services;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\Project;
-use App\Notifications\TaskAssignedNotification;
+use App\Events\TaskAssigned;
+use Illuminate\Validation\ValidationException;
 
 class TaskService
 {
-  
-    public function getTasksByProject(Project $project)
+    public function getTasksByProject(Project $project, array $filters = [], int $perPage = 10)
     {
-        return $project->tasks;
+        return $project->tasks()
+            ->with(['assignee', 'project'])
+            ->filterByStatus($filters['status'] ?? null)
+            ->filterByPriority($filters['priority'] ?? null)
+            ->search($filters['search'] ?? null)
+            ->latest()
+            ->paginate($perPage);
     }
 
-   
     public function createTask(Project $project, array $data): Task
     {
+        if (!empty($data['assigned_to'])) {
+            $this->validateUserIsProjectMember($project, (int)$data['assigned_to']);
+        }
+
         $task = $project->tasks()->create($data);
 
         if (!empty($data['assigned_to'])) {
-            $assignedUser = User::find($data['assigned_to']);
-            if ($assignedUser) {
-                $assignedUser->notify(new TaskAssignedNotification($task));
-            }
+            event(new TaskAssigned($task));
         }
 
-        return $task;
+        return $task->load(['assignee', 'project']);
     }
 
-   
     public function getTaskById(int $id): ?Task
     {
-        return Task::find($id);
+        return Task::with(['assignee', 'project', 'comments.user'])->find($id);
     }
 
-  
     public function updateTask(Task $task, array $data): Task
     {
         $oldAssignedTo = $task->assigned_to;
-        
-        $task->update($data);
 
-        if (!empty($data['assigned_to']) && $data['assigned_to'] != $oldAssignedTo) {
-            $assignedUser = User::find($data['assigned_to']);
-            if ($assignedUser) {
-                $assignedUser->notify(new TaskAssignedNotification($task));
-            }
+        if (!empty($data['assigned_to']) && (int)$data['assigned_to'] != (int)$oldAssignedTo) {
+            $this->validateUserIsProjectMember($task->project, (int)$data['assigned_to']);
         }
 
-        return $task;
+        $task->update($data);
+
+        if (!empty($data['assigned_to']) && (int)$data['assigned_to'] != (int)$oldAssignedTo) {
+            event(new TaskAssigned($task));
+        }
+
+        return $task->load(['assignee', 'project', 'comments']);
     }
 
-   
     public function deleteTask(Task $task): bool
     {
         return $task->delete();
     }
 
-    
     public function assignTask(Task $task, User $assignedUser)
     {
+        $this->validateUserIsProjectMember($task->project, $assignedUser->id);
+
         $task->update([
             'assigned_to' => $assignedUser->id,
         ]);
 
-        $assignedUser->notify(new TaskAssignedNotification($task));
+        event(new TaskAssigned($task));
 
-        return $task;
+        return $task->load(['assignee', 'project']); // تم تصحيح assigneث إلى assignee
+    }
+
+    /**
+     * التحقق من أن المستخدم إما صاحب المشروع أو عضو فيه
+     */
+    protected function validateUserIsProjectMember(Project $project, int $userId): void
+    {
+        $isOwner = ((int)$project->user_id === (int)$userId);
+        $isMember = $project->members()->where('user_id', $userId)->exists();
+
+        if (!$isOwner && !$isMember) {
+            throw ValidationException::withMessages([
+                'assigned_to' => ['The assigned user must be either the project owner or a member of the project.']
+            ]);
+        }
     }
 }

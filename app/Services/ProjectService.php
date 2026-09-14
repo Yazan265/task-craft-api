@@ -7,30 +7,54 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ProjectService
 {
-  public function createProject(array $data, int $userId): Project
+    public function createProject(array $data, int $userId): Project
     {
-     $data['user_id'] = $userId;
+        $data['user_id'] = $userId;
+        $project = Project::create($data);
 
-        return Project::create($data);
+        // تحميل علاقة المالك لإظهارها فوراً بعد الإنشاء
+        return $project->load('user');
     }
-  public function getAllProjects(): Collection
+
+    /**
+     * جلب مشاريع المستخدم الحالي (التي يملكها أو مشارك فيها)
+     */
+    public function getUserProjects(int $userId): Collection
     {
-        return Project::all();
+        return Project::where('user_id', $userId)
+            ->orWhereHas('members', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->with(['user', 'members', 'tasks'])
+            ->latest()
+            ->get();
     }
+
     public function getProjectById(int $id): ?Project
     {
-        return Project::find($id); 
+        return Project::with(['user', 'members', 'tasks'])->find($id); 
     }
 
     public function updateProject(Project $project, array $data): Project
     {
         $project->update($data);
-        return $project;
+        return $project->load(['user', 'members', 'tasks']);
     }
 
-   
     public function deleteProject(Project $project): bool
     {
         return $project->delete();
+    }
+
+    public function addMember(Project $project, int $userId, string $role = 'member'): void
+    {
+        $project->members()->syncWithoutDetaching([
+            $userId => ['role' => $role]
+        ]);
+    }
+
+    public function removeMember(Project $project, int $userId): void
+    {
+        $project->members()->detach($userId);
     }
 }

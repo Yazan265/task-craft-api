@@ -38,6 +38,7 @@ class TaskNotificationTest extends TestCase
     public function it_sends_notification_when_task_is_created_and_assigned()
     {
         Notification::fake();
+        $this->project->members()->attach($this->assignedUser->id);
 
        $response = $this->actingAs($this->owner)
     ->postJson("/api/projects/{$this->project->id}/tasks", [
@@ -58,6 +59,7 @@ class TaskNotificationTest extends TestCase
 public function it_sends_notification_when_task_is_reassigned_to_another_user()
 {
     Notification::fake();
+    $this->project->members()->attach($this->randomUser->id);
 
     $task = Task::factory()->create([
         'project_id'  => $this->project->id,

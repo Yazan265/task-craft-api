@@ -31,19 +31,14 @@ public function user_can_fetch_unread_notifications()
     $response = $this->actingAs($this->user, 'api')
         ->getJson('/api/notifications');
 
-    $response->assertStatus(200)
-        ->assertJsonStructure([
-            'data' => [
-                'data' => [
-                    '*' => ['id', 'type', 'data', 'created_at']
-                ],
-                'current_page',
-                'first_page_url',
-                'next_page_url',
-                'per_page',
-                'total',
-            ]
-        ]);
+   $response->assertJsonStructure([
+    'data' => [
+        '*' => ['id', 'type', 'data', 'created_at']
+    ],
+    'current_page',
+    'per_page',
+    'total',
+]);
 }
 
     #[Test]
@@ -65,24 +60,38 @@ public function user_can_fetch_unread_notifications()
         $this->assertNotNull($notification->fresh()->read_at);
     }
     #[Test]
-public function user_can_mark_all_notifications_as_read()
+    public function user_can_mark_all_notifications_as_read()
+    {
+        $task1 = Task::factory()->create();
+        $task2 = Task::factory()->create();
+
+        $this->user->notify(new TaskAssignedNotification($task1));
+        $this->user->notify(new TaskAssignedNotification($task2));
+
+        $this->assertEquals(2, $this->user->unreadNotifications()->count());
+
+        $response = $this->actingAs($this->user, 'api')
+            ->patchJson('/api/notifications/read-all');
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'message' => 'All notifications marked as read successfully.'
+            ]);
+
+        $this->assertEquals(0, $this->user->unreadNotifications()->count());
+    }
+    #[Test]
+public function user_can_get_unread_notifications_count()
 {
-    $task1 = Task::factory()->create();
-    $task2 = Task::factory()->create();
-
-    $this->user->notify(new TaskAssignedNotification($task1));
-    $this->user->notify(new TaskAssignedNotification($task2));
-
-    $this->assertEquals(2, $this->user->unreadNotifications()->count());
+    $task = Task::factory()->create();
+    $this->user->notify(new TaskAssignedNotification($task));
 
     $response = $this->actingAs($this->user, 'api')
-        ->patchJson('/api/notifications/read-all');
+        ->getJson('/api/notifications/unread-count');
 
     $response->assertStatus(200)
         ->assertJson([
-            'message' => 'All notifications marked as read successfully.'
+            'unread_count' => 1
         ]);
-
-    $this->assertEquals(0, $this->user->unreadNotifications()->count());
 }
 }
