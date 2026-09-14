@@ -27,7 +27,7 @@ A robust Task & Project Management RESTful API built with **Laravel 11**, focusi
  **Authentication**: JWT (`tymon/jwt-auth`)
  **Database**: MySQL / SQLite (for testing)
  **Architecture**: Service Layer Pattern & Policy-Based Authorization
- **Queue System**: Database / Redis Asynchronous Queue Workers
+ **Queue System**: Database Asynchronous Queue Worker
  **Exports**: `maatwebsite/excel`, `barryvdh/laravel-dompdf`
  **Documentation**: `darkaonline/l5-swagger` (OpenAPI 3.0)
  **Testing**: PHPUnit
