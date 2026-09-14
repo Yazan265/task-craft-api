@@ -95,7 +95,7 @@ Once the application is running, access the interactive **Swagger UI** to explor
 
 ---
 
-## 📚 API Endpoints Summary
+##  API Endpoints Summary
 
 ###  Authentication (`/api`)
 | Method | Endpoint | Description | Auth Required |
