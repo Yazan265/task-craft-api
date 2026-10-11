@@ -1,8 +1,10 @@
-# ---- Dockerfile لمشروع TaskCraft API (Laravel 11 / PHP 8.2) ----
+# TaskCraft API - development image (Laravel 11 / PHP 8.2)
+# The project code is mounted as a volume (see docker-compose.yml) and
+# Composer dependencies are installed automatically on first start.
 
 FROM php:8.2-fpm-bookworm
 
-# تثبيت الاعتمادات النظامية ومكتبات PHP المطلوبة لـ Laravel
+# System dependencies and PHP extensions required by Laravel
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -10,34 +12,20 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libzip-dev \
     libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
     libonig-dev \
     libxml2-dev \
     default-mysql-client \
+    && docker-php-ext-configure gd --with-jpeg --with-freetype \
     && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip \
     && rm -rf /var/lib/apt/lists/*
 
-# تثبيت Composer
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
 WORKDIR /var/www
-
-# تحسين الكاش: نسخ ملفات الاعتمادات أولاً
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-interaction --no-scripts --no-autoloader
-
-# نسخ باقي ملفات المشروع
-COPY . .
-
-# تفريغ الكاش المتبقي في الكود لتجنب البحث عن حزم الـ dev
-RUN php artisan config:clear || true \
-    && php artisan event:clear || true
-
-# إكمال تثبيت composer مع تحسين الـ Autoloader وتعطيل السكريبتات أثناء البناء
-RUN composer dump-autoload --optimize --no-dev --no-scripts
-
-# ضبط صلاحيات مجلدات Laravel
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
-    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
 EXPOSE 9000
 CMD ["php-fpm"]

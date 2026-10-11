@@ -51,7 +51,7 @@ class ReportController extends Controller
     }
 
     #[OA\Get(
-        path: '/api/projects/{project}/reports/export-excel',
+        path: '/api/projects/{project}/reports/export/excel',
         summary: 'Export project report as Excel file',
         tags: ['Reports'],
         security: [['bearerAuth' => []]],
@@ -73,13 +73,13 @@ class ReportController extends Controller
         $this->authorize('export', $project);
 
         return Excel::download(
-            new ProjectReportExport($project), 
+            new ProjectReportExport($project),
             "project-{$project->id}-report.xlsx"
         );
     }
 
     #[OA\Get(
-        path: '/api/projects/{project}/reports/export-pdf',
+        path: '/api/projects/{project}/reports/export/pdf',
         summary: 'Export project report as PDF file',
         tags: ['Reports'],
         security: [['bearerAuth' => []]],
@@ -98,7 +98,7 @@ class ReportController extends Controller
     )]
     public function exportPdf(Project $project)
     {
-        $this->authorize('view', $project);
+        $this->authorize('export', $project);
 
         $summary = $this->reportService->getProjectSummary($project);
         $project->load('tasks');

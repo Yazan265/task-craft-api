@@ -334,13 +334,13 @@
                 ]
             }
         },
-        "/api/projects/{project}/reports/export-excel": {
+        "/api/projects/{project}/reports/export/excel": {
             "get": {
                 "tags": [
                     "Reports"
                 ],
                 "summary": "Export project report as Excel file",
-                "operationId": "951a67e5e670dabe68992972d67d93ea",
+                "operationId": "61bf5e00778cc905e19e472955208c87",
                 "parameters": [
                     {
                         "name": "project",
@@ -372,13 +372,13 @@
                 ]
             }
         },
-        "/api/projects/{project}/reports/export-pdf": {
+        "/api/projects/{project}/reports/export/pdf": {
             "get": {
                 "tags": [
                     "Reports"
                 ],
                 "summary": "Export project report as PDF file",
-                "operationId": "3e22b25180cd70e5d08789226bb5c413",
+                "operationId": "4c2c787662a0637eadd31faa86a22276",
                 "parameters": [
                     {
                         "name": "project",

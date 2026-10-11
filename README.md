@@ -1,23 +1,24 @@
-# TaskCraft API 
+# TaskCraft API
 
-A robust Task & Project Management RESTful API built with **Laravel 11**, focusing on high code quality, **Test-Driven Development (TDD)**, Asynchronous Job Queues, JWT Authentication, Clean Architecture (Service Layer Pattern), OpenAPI/Swagger documentation, and multi-format report exports (PDF & Excel).
+A robust Task & Project Management RESTful API built with **Laravel 11**, focusing on code quality, automated testing, asynchronous job queues, JWT authentication, a Service Layer architecture, OpenAPI/Swagger documentation, and multi-format report exports (PDF & Excel).
 
 ---
 
 ## Key Features
 
 - **JWT Authentication**: Secure user registration, login, token refresh, and logout using JSON Web Tokens (`tymon/jwt-auth`).
-- **Project Management & Access Control**: Full CRUD operations for managing projects with thin controllers, dedicated `ProjectService`, and custom Form Requests.
-- **Project Members & Granular Roles**: Multi-user collaboration using the `project_user` pivot table supporting fine-grained role permissions (`owner`, `member`, `viewer`).
-- **Task Management & Advanced Filtering**: Create, assign, and track tasks with built-in Eloquent scopes for filtering by status (`?status=`), priority (`?priority=`), and text search (`?search=`).
-- **Strict Business Logic & Restrictions**: Enforced rules including preventing new comments on `completed` tasks and restricting project modification solely to project owners.
-- **File Uploads & Task Comments**: Threaded task comments with file attachment uploads, automatic storage management, and dynamic `attachment_url` accessors.
-- **Asynchronous Event-Driven Architecture**: Decoupled events (`TaskAssigned`) and database notifications handled via **Asynchronous Queues** (`ShouldQueue`) for scalable background job processing.
-- **Reports & Data Exports**: 
-  - Analytics endpoint returning real-time completion rates, status distribution, and task counts.
-  - Export comprehensive project summaries directly to **Excel** (`.xlsx`) and **PDF** (`.pdf`) formats.
-- **Interactive OpenAPI / Swagger Docs**: Fully annotated API documentation powered by `L5-Swagger` with support for bearer authentication testing directly in-browser.
-- **Automated Testing Suite**: 100% Core Feature coverage using PHPUnit with `RefreshDatabase` TDD methodology (50+ passing tests).
+- **Project Management & Access Control**: Full CRUD operations for managing projects with thin controllers, a dedicated `ProjectService`, and custom Form Requests.
+- **Project Members & Granular Roles**: Multi-user collaboration using the `project_user` pivot table, supporting role-based permissions (`owner`, `member`, `viewer`).
+- **Task Management & Advanced Filtering**: Create, assign, and track tasks with Eloquent scopes for filtering by status (`?status=`), priority (`?priority=`), and text search (`?search=`).
+- **Business Rules & Restrictions**: Enforced rules including preventing new comments on `completed` tasks and restricting project modification to project owners.
+- **File Uploads & Task Comments**: Task comments with file attachment uploads and dynamic `attachment_url` accessors.
+- **Asynchronous Event-Driven Notifications**: Events (task assigned, comment added) are handled by queued listeners (`ShouldQueue`) that create database notifications in the background through a database queue worker.
+- **Reports & Data Exports**:
+  - Analytics endpoint returning completion rates, status distribution, and task counts.
+  - Export project summaries to **Excel** (`.xlsx`) and **PDF** (`.pdf`) formats.
+- **Interactive OpenAPI / Swagger Docs**: Annotated API documentation powered by `L5-Swagger`, with bearer authentication testing in the browser.
+- **Automated Testing Suite**: 51 unit and feature tests (PHPUnit with `RefreshDatabase`) covering authentication, authorization, notifications, queued listeners, and report exports.
+- **Dockerized Setup**: Docker Compose environment with PHP-FPM, Nginx, MySQL, and a queue worker.
 
 ---
 
@@ -25,60 +26,79 @@ A robust Task & Project Management RESTful API built with **Laravel 11**, focusi
 
 - **Framework**: Laravel 11.x (PHP 8.2+)
 - **Authentication**: JWT (`tymon/jwt-auth`)
-- **Database**: MySQL / SQLite (for testing)
+- **Database**: MySQL (SQLite for testing)
 - **Architecture**: Service Layer Pattern & Policy-Based Authorization
-- **Queue System**: Database Asynchronous Queue Worker
+- **Queue System**: Database queue with a dedicated worker
 - **Exports**: `maatwebsite/excel`, `barryvdh/laravel-dompdf`
 - **Documentation**: `darkaonline/l5-swagger` (OpenAPI 3.0)
 - **Testing**: PHPUnit
+- **Containerization**: Docker, Docker Compose, Nginx
 
 ---
 
 ## Quick Start & Setup
 
-### Local Environment Setup:
-1. Clone the repository:
-   git clone [https://github.com/Yazan265/task-craft-api.git](https://github.com/Yazan265/task-craft-api.git)
-   cd task-craft-api
-2. Install Dependencies:
-   composer install
-3. Environment Configuration:
-   cp .env.example .env
-4. Generate App Key & JWT Secret:
-   php artisan key:generate
-   php artisan jwt:secret
-5. Run Database Migrations & Seeders:
-   php artisan migrate --seed
-6. Create Storage Link for File Uploads:
-   php artisan storage:link
-7. Run Queue Worker for Asynchronous Jobs:
-   php artisan queue:work
-8. Generate Swagger Documentation:
-   php artisan l5-swagger:generate
-9. Run Local Development Server:
-   php artisan serve
+### Option 1: Docker (recommended)
 
----
+Requirements: Docker and Docker Compose.
 
-### Docker Setup (Containerized):
-1. Build & Start Containers:
-   docker-compose build --no-cache app
-   docker-compose up -d
-2. Run Commands Inside Docker Container:
-   docker-compose exec app php artisan key:generate
-   docker-compose exec app php artisan jwt:secret
-   docker-compose exec app php artisan migrate --seed
-   docker-compose exec app php artisan storage:link
-   docker-compose exec app php artisan l5-swagger:generate
+```bash
+git clone https://github.com/Yazan265/task-craft-api.git
+cd task-craft-api
+cp .env.example .env
+docker compose up -d --build
+```
+
+On the first start, the `app` container installs the Composer dependencies.
+Follow the progress with `docker compose logs -f app` and wait until it finishes
+and PHP-FPM reports that it is ready. Then run:
+
+```bash
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan jwt:secret
+docker compose exec app php artisan migrate --seed
+docker compose exec app php artisan storage:link
+docker compose exec app php artisan l5-swagger:generate
+docker compose restart queue
+```
+
+The API is available at `http://localhost:8000/api`.
+
+| Service     | Description                              | Port |
+| :---------- | :--------------------------------------- | :--- |
+| `app`       | Laravel on PHP 8.2-FPM                   | -    |
+| `webserver` | Nginx                                    | 8000 |
+| `db`        | MySQL 8.0                                | 3307 |
+| `queue`     | Queue worker (`php artisan queue:work`)  | -    |
+
+> The database credentials in `docker-compose.yml` are for local development only.
+> Inside Docker, the database settings are provided by `docker-compose.yml`, so `DB_HOST` in `.env` does not need to change.
+
+### Option 2: Local environment
+
+```bash
+git clone https://github.com/Yazan265/task-craft-api.git
+cd task-craft-api
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan jwt:secret
+php artisan migrate --seed
+php artisan storage:link
+php artisan l5-swagger:generate
+php artisan queue:work   # run in a separate terminal
+php artisan serve
+```
 
 ---
 
 ## Environment Variables Configuration
 
-Ensure your `.env` contains the essential database, queue, JWT, and Swagger settings:
+Make sure your `.env` contains the essential database, queue, JWT, and Swagger settings:
 
+```env
 DB_CONNECTION=mysql
-DB_HOST=127.0.0.1 (or 'db' for Docker)
+DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=task_craft_db
 DB_USERNAME=root
@@ -89,14 +109,15 @@ QUEUE_CONNECTION=database
 JWT_SECRET=your_generated_jwt_secret_here
 JWT_TTL=60
 L5_SWAGGER_GENERATE_ALWAYS=true
+```
 
 ---
 
 ## Interactive API Documentation
 
-Once the application is running, access the interactive **Swagger UI** to explore and test endpoints:
+Once the application is running, open the Swagger UI to explore and test the endpoints:
 
-  `[http://127.0.0.1:8000/api/documentation](http://127.0.0.1:8000/api/documentation)`
+`http://127.0.0.1:8000/api/documentation`
 
 ---
 
@@ -125,7 +146,7 @@ Once the application is running, access the interactive **Swagger UI** to explor
 ### Tasks (`/api`)
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :---: |
-| GET | /api/projects/{project}/tasks | List project tasks (Supports `?status=`, `?priority=`, `?search=`) | Yes |
+| GET | /api/projects/{project}/tasks | List project tasks (supports `?status=`, `?priority=`, `?search=`) | Yes |
 | POST | /api/projects/{project}/tasks | Create task & trigger async assignment notification | Yes |
 | GET | /api/tasks/{id} | Get task details | Yes |
 | PUT | /api/tasks/{id} | Update task status, priority, or assignee | Yes |
@@ -135,7 +156,7 @@ Once the application is running, access the interactive **Swagger UI** to explor
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :---: |
 | GET | /api/tasks/{task}/comments | List task comments and attachments | Yes |
-| POST | /api/tasks/{task}/comments | Add comment with optional file attachment (Restricted on `completed` tasks) | Yes |
+| POST | /api/tasks/{task}/comments | Add comment with optional file attachment (restricted on `completed` tasks) | Yes |
 | PUT | /api/comments/{comment} | Update comment text | Yes |
 | DELETE | /api/comments/{comment} | Delete comment | Yes |
 
@@ -158,32 +179,37 @@ Once the application is running, access the interactive **Swagger UI** to explor
 
 ## Running Automated Tests
 
-This project adheres strictly to **Test-Driven Development (TDD)** using PHPUnit.
+Run the full test suite:
 
-Run the full test suite (Local):
+```bash
+# Local
 php artisan test
 
-Run tests using Docker:
-docker-compose exec app php artisan test
+# Docker
+docker compose exec app php artisan test
+```
 
-Run specific test groups or classes:
+Run specific test classes:
+
+```bash
 php artisan test --filter=TaskFilterTest
-php artisan test --filter=ReportTest
+php artisan test --filter=ProjectReportTest
 php artisan test --filter=ProjectMemberTest
 php artisan test --filter=NotificationTest
+```
 
 ---
 
 ## Architecture & Best Practices
 
-**Service Layer Pattern**: Decouples complex business calculations (reports, exports, file handling) from Controllers.
-**Asynchronous Queue Workers**: Uses `ShouldQueue` on event listeners to offload database notification dispatching without delaying HTTP response cycles.
-**Policy Authorization**: Resource access is strictly controlled using Laravel Policies based on `project_user` roles.
-**Standardized API Responses**: Built with Eloquent API Resources to unify JSON output structure and handle relational data efficiently.
-**TDD Methodology**: Feature tests drive domain execution and database isolation via `RefreshDatabase`.
+- **Service Layer Pattern**: Keeps business logic out of the controllers.
+- **Asynchronous Queue Workers**: Event listeners implement `ShouldQueue`, so notifications are created in the background without delaying the HTTP response.
+- **Policy Authorization**: Resource access is controlled with Laravel Policies based on `project_user` roles.
+- **Standardized API Responses**: Eloquent API Resources provide a consistent JSON structure.
+- **Test Isolation**: Feature tests use `RefreshDatabase` for a clean database state.
 
 ---
 
-## Author & License
+## Author
 
-Developed with by **Yazan Loho** — Software Engineer & Backend Developer.
+Developed by **Yazan Loho** — Backend Developer (Laravel / PHP).

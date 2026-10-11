@@ -1,11 +1,15 @@
 services:
-  # تطبيق Laravel (PHP-FPM)
+  # Laravel application (PHP-FPM)
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: taskcraft-app
     restart: unless-stopped
+    # Installs dependencies on first run (vendor/ is not committed), then starts PHP-FPM
+    command: >
+      sh -c "[ -f vendor/autoload.php ] || composer install --no-interaction --prefer-dist;
+      exec php-fpm"
     volumes:
       - ./:/var/www
     environment:
@@ -16,11 +20,37 @@ services:
       DB_USERNAME: taskcraft
       DB_PASSWORD: secret
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - taskcraft-network
 
-  # خادم الويب (Nginx) يستقبل الطلبات ويمررها لـ PHP-FPM
+  # Queue worker (processes queued jobs)
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taskcraft-queue
+    restart: unless-stopped
+    command: >
+      sh -c "until [ -f vendor/autoload.php ]; do sleep 2; done;
+      php artisan queue:work --tries=3"
+    volumes:
+      - ./:/var/www
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: task_craft
+      DB_USERNAME: taskcraft
+      DB_PASSWORD: secret
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - taskcraft-network
+
+  # Web server (Nginx) forwards requests to PHP-FPM
   webserver:
     image: nginx:alpine
     container_name: taskcraft-nginx
@@ -35,7 +65,7 @@ services:
     networks:
       - taskcraft-network
 
-  # قاعدة البيانات
+  # Database (credentials below are for local development only)
   db:
     image: mysql:8.0
     container_name: taskcraft-db
@@ -49,6 +79,11 @@ services:
       - "3307:3306"
     volumes:
       - taskcraft-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-prootsecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     networks:
       - taskcraft-network
 
